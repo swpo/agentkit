@@ -6,19 +6,23 @@ This doc tells you exactly what you need to write to make a valid task. It is in
 
 ## File layout
 
-A task lives in a workspace's `task/` subdirectory:
+A task project is its own top-level directory, conventionally under `~/agentkit-tasks/`:
 
 ```
-my-workspace/
-  task/
+~/agentkit-tasks/
+  my-task/
     task.py        # entry point — required
     README.md      # describes the task — required
+    CLAUDE.md      # task-author identity, auto-loaded by Claude Code
+    .gitignore
     ...            # optional helpers, data, prompts
 ```
 
+`agentkit init-task` scaffolds this layout (and runs `git init` plus an initial commit). The directory is its own git repo, separate from any training run.
+
 `task.py` must define a callable named `get_task()` that takes no arguments and returns an object satisfying the Task protocol below. The framework imports this file and calls `get_task()` whenever it needs to load the task.
 
-The `task/` directory is added to `sys.path` when the task module is loaded, so you can split your task across multiple files (`task/data.py`, `task/scoring.py`, etc.) and import them normally from `task.py`.
+The task project directory is added to `sys.path` when the task module is loaded, so you can split your task across multiple files (`data.py`, `scoring.py`, etc.) and import them normally from `task.py`.
 
 ## The Task protocol
 
@@ -110,6 +114,8 @@ Your task must:
 - **Notes should be actionable** — when `score_training` returns `notes`, write something the agent can learn from. "Predicted X, expected Y, you missed Z and added W" is more useful than "wrong".
 - **Format failures should return 0 with a clear note** — don't crash. The agent can recover from a 0 with a clear error in `notes`.
 
-## Worked example
+## What a complete task looks like
 
-See the `gene_perturbation_forward` task in `agentkit-runs/gpf-pilot/task/task.py` for a complete real-world example: HuggingFace dataset loading, prompt cleanup, JSON answer format, F1 scoring with diff notes, deterministic train/val pools.
+A real task project will typically include: a HuggingFace dataset (or local file) load behind a `functools.cached_property`, prompt construction with whatever cleanup the source data needs, a clearly specified answer format (often JSON), a scoring function with helpful diff notes (e.g. F1 with the missed/extra elements called out), and a deterministic train/val partition seeded at construction time.
+
+See [swpo/agentkit-gpf-pilot](https://github.com/swpo/agentkit-gpf-pilot) for a published *training run* against a real task — it shows the full learning-agent workspace (BOOTSTRAP, learning algorithm, learning log, answer script, accumulated skills) but not the task source itself, which is intentionally kept separate.

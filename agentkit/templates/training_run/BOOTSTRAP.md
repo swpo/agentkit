@@ -90,7 +90,7 @@ from anthropic import Anthropic
 prompt = sys.stdin.read()
 system = open("ANSWER_CONTEXT.md").read()
 resp = Anthropic().messages.create(
-    model="claude-opus-4-6", max_tokens=4096,
+    model="claude-opus-4-7", max_tokens=4096,
     system=system,
     messages=[{"role": "user", "content": prompt}],
 )
